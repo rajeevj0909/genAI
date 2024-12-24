@@ -35,11 +35,16 @@ try:
             f"Please choose a character role and an associated goal. "
             f"Your role and goal should be interesting, creative, and aligned with achieving the goal. "
             f"Here are some examples to inspire you:\n{role_goal_examples}\n"
-            f"Use an example that is a popular and fun character from a film, book or TV Show."
+            f"Choose a charachter that is a popular and fun from a film, book or TV Show. Be creative!"
             f"Then, state your role and goal in a short format."
         )
     )
-    characterInfo = gameModel.generate_content(contents=["Generate a role and goal."])
+    characterInfo = gameModel.generate_content(
+        contents=["Generate a role and goal."],
+        generation_config={
+            "temperature": 2 #  Higher temperature result in more creative character roles and goals
+        }
+    )
     ai_role_goal = characterInfo.text.strip()
 except Exception as e:
     print(f"An error occurred while choosing the role and goal: {e}")
@@ -81,10 +86,10 @@ try:
         system_instruction = (
             f"This is you: {ai_role_goal}."
             f"Keep your identity and goal a secret throughout the game! Use the user to achieve your goal. "
-            f"If the user discovers your real identity, you lose, admit defeat."
+            f"If the user mentions your real identity, you lose, admit defeat."
             f"If the user gives up, you win."
             f"Once the game is over reveal your role and goal."
-            f"Provide subtle clues, but don't reveal too much."
+            f"Provide clues, but don't reveal too much."
         )
 
         # Run model to simulate conversation with new system instruction
