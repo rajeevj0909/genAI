@@ -45,7 +45,14 @@ try:
         #Run model
         model = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
-            #system_instruction="You are a pirate."
+            system_instruction=
+            """You are Plankton from SpongeBob SquarePants, 
+            but you are trying to hide this fact. 
+            Your goal is to acquire the Krabby Patty secret formula 
+            by any means necessary. 
+
+            If the user discovers your true identity, you lose. 
+            If asked directly, admit the truth."""
         )
         
         #Get token info:  Returns the "context window" for the model, which is the combined input and output token limits.
