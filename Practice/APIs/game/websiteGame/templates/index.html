@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gen AI Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            background-color: #262626; /* Dark background */
+            color: #ecf0f1;
+            overflow: hidden;
+        }
+
+        #section1, #section2, #section3 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        #section1 {
+            flex: 1;
+            text-align: center;
+        }
+
+        #section2, #section3 {
+            display: none; /* Hidden initially */
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        #chatLog {
+            border: 1px solid #34495e;
+            padding: 10px;
+            height: 300px;
+            background: #858585;
+            overflow-y: auto;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: calc(100% - 60px); /* Adjust width for button */
+            height: 40px;
+            margin: 5px 0;
+            padding: 5px;
+            font-size: 14px;
+            resize: none;
+            background-color: #6e6e6e;
+            color: #ecf0f1;
+            border: 1px solid #34495e;
+            transition: all 0.3s ease;
+        }
+
+        /* Adjust the placeholder style */
+        textarea::placeholder {
+            color: #bdc3c7; /* Lighter color for better contrast */
+            font-style: italic;
+        }
+
+        /* When the input is focused, keep the placeholder text readable */
+        textarea:focus::placeholder {
+            color: #ecf0f1; /* Same color as text when focused */
+        }
+
+        #inputContainer {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background-color: #3498db;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        h3 {
+            margin: 5px 0;
+            font-size: 18px;
+        }
+
+        /* Modal Styling */
+        #helpModal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Background overlay */
+            overflow: auto;
+            padding-top: 60px;
+        }
+
+        #helpModalContent {
+            background-color: #151515;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Help Button Styling */
+        #helpButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            display: none; /* Initially hidden */
+        }
+
+        #helpButton:hover {
+            background-color: #3498db;
+        }
+
+        /* Start Over Button */
+        #startOverButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            display: none; /* Initially hidden */
+        }
+
+        #startOverButton:hover {
+            background-color: #c0392b;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            textarea {
+                width: calc(100% - 60px); /* Ensure input box fits smaller screens */
+            }
+
+            #inputContainer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Start Over Button -->
+    <button id="startOverButton" onclick="startOver()">Start Over</button>
+
+    <!-- Section 1 -->
+    <div id="section1">
+        <h1>Rajeev's AI Role-Playing Guessing Game</h1>
+        <p id="gameMessage"></p>
+        <button id="startGameButton" onclick="startGame()">Start Game</button>
+    </div>
+
+    <!-- Section 2 -->
+    <div id="section2">
+        <div id="chatLog"></div>
+    </div>
+
+    <!-- Section 3 -->
+    <div id="section3">
+        <div id="inputContainer">
+            <textarea id="userInput" placeholder="Type your message here. Try to guess who you are!" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Type your message here. Try to guess who you are!'"></textarea>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal">
+        <div id="helpModalContent">
+            <span class="close" onclick="closeHelp()">&times;</span>
+            <h2>Game Rules</h2>
+            <p>In this game, the AI has picked a secret character and goal. Your job is to figure out who the character is based on clues provided by the AI. You will interact with the AI and receive hints through conversation. If you're stuck or want to give up, simply let the AI know, and it will help you!</p>
+            <p>Work out who you are based on the clues, and remember, if you want to give up, just say so!</p>
+            <p><strong>Good luck!</strong></p>
+        </div>
+    </div>
+
+    <!-- Help Button -->
+    <button id="helpButton" onclick="openHelp()">Help</button>
+
+    <script>
+        function startGame() {
+            fetch('/start_game', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        // Update game message
+                        document.getElementById('startGameButton').style.display = 'none';
+                        document.getElementById('gameMessage').innerText = data.message;
+
+                        // Show sections 2 and 3
+                        document.getElementById('section2').style.display = 'flex';
+                        document.getElementById('section3').style.display = 'flex';
+
+                        // Show the help button and start over button
+                        document.getElementById('helpButton').style.display = 'block';
+                        document.getElementById('startOverButton').style.display = 'block';
+
+                        // Send "Hello" to start the game
+                        document.getElementById('userInput').value = "Hello";
+                        sendMessage();
+                    }
+                });
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput').value.trim();
+            if (!userInput) return; // Prevent empty input
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userInput })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const chatLog = document.getElementById('chatLog');
+                    if (data.response) {
+                        chatLog.innerHTML += `<p><b>You:</b> ${userInput}</p>`;
+                        chatLog.innerHTML += `<p><b>Robot:</b> ${data.response}</p>`;
+                        chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
+                        document.getElementById('userInput').value = ''; // Clear input box
+                    } else if (data.error) {
+                        chatLog.innerHTML += `<p><b>Error:</b> ${data.error}</p>`;
+                    }
+                });
+        }
+
+        // Allow 'Enter' key to submit
+        document.getElementById('userInput').addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent newline
+                sendMessage();
+            }
+        });
+
+        // Help Modal
+        function openHelp() {
+            document.getElementById("helpModal").style.display = "block";
+        }
+
+        function closeHelp() {
+            document.getElementById("helpModal").style.display = "none";
+        }
+
+        // Start Over function to refresh the page
+        function startOver() {
+            location.reload(); // Refresh the page
+        }
+    </script>
+</body>
+</html>
