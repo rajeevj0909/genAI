@@ -1,20 +1,27 @@
 """
-This Python script demonstrates a simple conversational AI using the Gemini API. 
-Key Features:
-- Loads API key from an environment variable (.env file).
-- Suppresses unnecessary log messages for a cleaner output.
-- Allows for user input and provides responses from the Gemini model.
-- Includes basic error handling.
-- Maintains a simple conversation history to provide context to the model.
+This Python script implements a simple text-based role-playing game using the Gemini API. 
+
+**Gameplay:**
+
+1. You choose a character role and a goal for that character.
+2. You interact with the AI by typing messages.
+3. The AI responds as the character it was assigned, attempting to achieve its own goal while keeping its true identity a secret. 
+
+**Objective:**
+
+Your goal is to uncover the AI's true identity or prevent it from achieving its goal. 
+
+**How to Play:**
+
+- Type your messages and press Enter.
+- Type "quit" or "exit" to end the game.
+
+Enjoy the game!
 """
 
 from dotenv import load_dotenv
 import os
 import google.generativeai as genai
-
-#Suppress logging warnings
-os.environ["GRPC_VERBOSITY"] = "ERROR"
-os.environ["GLOG_minloglevel"] = "2"
 
 #Get API key from .env file
 load_dotenv()
@@ -23,8 +30,12 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Initialise conversation history
 conversation_history = []
-
-print("Robot: Hello\nType 'quit' or 'exit' to end the conversation.\n")
+#Player 1 chooses role and goal
+print("Welcome to the game!\nChoose a character role and a goal for that character before passing the game to player 2\n")
+roleChoice=str(input("What character would you like to be?\n"))
+goalChoice=str(input("What goal is the character trying to reach?\n"))
+os.system('cls')#Clears terminal to start game for player 2
+print("\nRobot: Hello\nType 'quit' or 'exit' to end the conversation.\n")
 
 #Run Model
 try:
@@ -46,21 +57,14 @@ try:
         model = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
             system_instruction=
-            """You are Plankton from SpongeBob SquarePants, 
-            but you are trying to hide this fact. 
-            Your goal is to acquire the Krabby Patty secret formula 
-            by any means necessary. 
-
+            """You are """ + roleChoice + """. 
+            Your goal is by any means necessary to 
+            keep your true identity and goal a secret, 
+            the goal is to use the user to help you to
+            """ + goalChoice + """.
             If the user discovers your true identity, you lose. 
-            If asked directly, admit the truth."""
+            If you lose, admit the truth."""
         )
-        
-        #Get token info:  Returns the "context window" for the model, which is the combined input and output token limits.
-        '''
-        model_info = genai.get_model("models/gemini-1.5-flash")
-        print(f"{model_info.input_token_limit=}")
-        print(f"{model_info.output_token_limit=}")
-        '''
 
         #Run response
         response = model.generate_content(
