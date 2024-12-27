@@ -164,15 +164,23 @@
             top: 10px;
             left: 10px;
             padding: 10px;
-            background-color: #e74c3c;
+            background-color: #2980b9; /* Blue button */
             color: white;
             border: none;
             border-radius: 3px;
             display: none; /* Initially hidden */
         }
 
+        #startOverButton.red {
+            background-color: #e74c3c; /* Red button */
+        }
+
+        #startOverButton.green {
+            background-color: #2ecc71; /* Green button */
+        }
+
         #startOverButton:hover {
-            background-color: #c0392b;
+            background-color: #3498db;
         }
 
         /* Mobile Responsiveness */
@@ -270,10 +278,20 @@
                 .then(data => {
                     const chatLog = document.getElementById('chatLog');
                     if (data.response) {
+                        // Check if the user won or lost
+                        console.log(data.response);
+                        if (data.gameStatus.includes("lost")) {
+                            document.getElementById('startOverButton').classList.add('red');
+                            showGameOverPopup("You have given up! The AI has won!");
+                        } else if (data.gameStatus.includes("won")) {
+                            document.getElementById('startOverButton').classList.add('green');
+                            showGameOverPopup("Congratulations! You've guessed correctly!");
+                        }
                         chatLog.innerHTML += `<p><b>You:</b> ${userInput}</p>`;
                         chatLog.innerHTML += `<p><b>Robot:</b> ${data.response}</p>`;
                         chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
                         document.getElementById('userInput').value = ''; // Clear input box
+
                     } else if (data.error) {
                         chatLog.innerHTML += `<p><b>Error:</b> ${data.error}</p>`;
                     }
@@ -290,16 +308,38 @@
 
         // Help Modal
         function openHelp() {
-            document.getElementById("helpModal").style.display = "block";
+            document.getElementById('helpModal').style.display = 'block';
         }
 
         function closeHelp() {
-            document.getElementById("helpModal").style.display = "none";
+            document.getElementById('helpModal').style.display = 'none';
         }
 
         // Start Over function to refresh the page
         function startOver() {
-            location.reload(); // Refresh the page
+            fetch('/start_over', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('gameMessage').innerText = data.message;
+
+                    // Reset the game interface
+                    document.getElementById('startGameButton').style.display = 'block';
+                    document.getElementById('section2').style.display = 'none';
+                    document.getElementById('section3').style.display = 'none';
+
+                    // Hide the help button and start over button
+                    document.getElementById('helpButton').style.display = 'none';
+                    document.getElementById('startOverButton').style.display = 'none';
+
+                    // Remove any red/green color
+                    document.getElementById('startOverButton').classList.remove('red', 'green');
+                });
+        }
+
+        function showGameOverPopup(message) {
+            alert(message
+            + `\nYou may carry on the conversation to ask the AI who they were and what their goal was.
+             \n\nWhen you're ready to end the game, click 'Start Over'.`);
         }
     </script>
 </body>
