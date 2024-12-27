@@ -13,6 +13,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 # Initialize conversation history and selected role/goal
 conversation_history = []
 ai_role_goal = None
+game_over = False  # Add this flag to track if the game is over
 
 # Define a list of possible roles and goals for the game
 roles_and_goals = [
@@ -35,7 +36,7 @@ def index():
 
 @app.route('/start_game', methods=['POST'])
 def start_game():
-    global ai_role_goal, conversation_history
+    global ai_role_goal, conversation_history, game_over
 
     try:
         character_type = request.json.get('characterType', 'kids')
@@ -57,6 +58,7 @@ def start_game():
             generation_config={"temperature": 1.5} #Higher temperature result in more creative character roles and goals
         )
         ai_role_goal = characterInfo.text.strip()
+        game_over = False  # Reset the game_over flag
         print(f"AI Role and Goal: {ai_role_goal}") #DEBUG - To see the generated role and goal
         conversation_history = []  # Reset history
         return jsonify({"message": "Game started! The AI has picked its secret role and goal. Start guessing!"})
@@ -65,7 +67,7 @@ def start_game():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    global conversation_history, ai_role_goal
+    global conversation_history, ai_role_goal, game_over
 
     user_input = request.json.get('userInput', '')
     if not user_input:
@@ -75,28 +77,33 @@ def chat():
 
     try:
         # After the user input, check if the game is won, lost or still ongoing
-        game_status = check_game_status()
-    
+        if not game_over:  # Only check game status if the game is not over
+            game_status = check_game_status()
+        else:
+            game_status = "ongoing"  # Keep the game status as ongoing if the game is over
+
         system_instruction = (
             f"This is you: {ai_role_goal}."
             f"Keep your identity and goal a secret throughout the game! Use the user to achieve your goal. "
             f"Provide clues throughout the game, but don't reveal too much."
         )
 
-        if game_status == "won":
+        if game_status == "won" and not game_over:
+            game_over = True  # Set the game_over flag to True
             system_instruction = (
-            f"This is you: {ai_role_goal}."
-            f"Keep your identity and goal a secret throughout the game! Use the user to achieve your goal. "
-            f"The user has now won the game. Reveal your identity and goal if you have not already. "
-            f"Answer any other questions the user may have."
-        )
-        elif game_status == "lost":
+                f"This is you: {ai_role_goal}."
+                f"Keep your identity and goal a secret throughout the game! Use the user to achieve your goal. "
+                f"The user has now won the game. Reveal your identity and goal if you have not already. "
+                f"Answer any other questions the user may have."
+            )
+        elif game_status == "lost" and not game_over:
+            game_over = True  # Set the game_over flag to True
             system_instruction = (
-            f"This is you: {ai_role_goal}."
-            f"Keep your identity and goal a secret throughout the game! Use the user to achieve your goal. "
-            f"The user has given up. Reveal your identity and goal if you have not already. "
-            f"Answer any other questions the user may have."
-        )
+                f"This is you: {ai_role_goal}."
+                f"Keep your identity and goal a secret throughout the game! Use the user to achieve your goal. "
+                f"The user has given up. Reveal your identity and goal if you have not already. "
+                f"Answer any other questions the user may have."
+            )
 
         guessModel = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
