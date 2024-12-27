@@ -15,7 +15,7 @@
             justify-content: center;
             height: 100vh;
             width: 100vw;
-            background-color: #262626; /* Dark background */
+            background-color: #000000; /* Black background */
             color: #ecf0f1;
             overflow: hidden;
         }
@@ -43,7 +43,7 @@
             border: 1px solid #34495e;
             padding: 10px;
             height: 300px;
-            background: #858585;
+            background: #2c3e50; /* Dark grey background */
             overflow-y: auto;
             width: 100%;
             margin-bottom: 10px;
@@ -56,7 +56,7 @@
             padding: 5px;
             font-size: 14px;
             resize: none;
-            background-color: #6e6e6e;
+            background-color: #2c3e50; /* Dark grey background */
             color: #ecf0f1;
             border: 1px solid #34495e;
             transition: all 0.3s ease;
@@ -207,13 +207,13 @@
         }
 
         #characterTypeInput {
-            width: 100px; /* Smaller input box */
+            width: 200px;
             height: 20px;
             margin: 0 5px;
             padding: 5px;
             font-size: 14px;
             resize: none;
-            background-color: #6e6e6e;
+            background-color: #2c3e50; /* Dark grey background */
             color: #ecf0f1;
             border: 1px solid #34495e;
             transition: all 0.3s ease;
@@ -228,6 +228,7 @@
     <!-- Section 1 -->
     <div id="section1">
         <h1>Rajeev's AI Role-Playing Guessing Game</h1>
+        <p id="introText">In this game, you will try to guess the character chosen by the AI based on the clues provided. Choose a character type to start the game.</p>
         <div id="characterTypeContainer">
             <label for="characterTypeInput">You have chosen to guess a</label>
             <input type="text" id="characterTypeInput" value="KIDS">
@@ -278,6 +279,7 @@
                         // Update game message
                         document.getElementById('startGameButton').style.display = 'none';
                         document.getElementById('gameMessage').innerText = data.message;
+                        document.getElementById('introText').style.display = 'none';
                         document.getElementById('characterTypeContainer').style.display = 'none';
 
                         // Show sections 2 and 3
@@ -313,7 +315,7 @@
                         if (data.gameStatus.includes("won")) {//If user won
                             showGameOverPopup("Congratulations! You've won the game!");
                             document.getElementById('startOverButton').classList.add('green');
-                            document.getElementById('gameMessage').style.color = 'green'; 
+                            document.getElementById('gameMessage').style.color = '#39FF14'; 
                             document.getElementById('gameMessage').style.fontWeight = 'bold';
                             document.getElementById('gameMessage').style.fontSize = 'calc(1em + 2px)';
                         }
@@ -357,6 +359,29 @@
             + `\nYou may carry on the conversation to ask the AI who they were and what their goal was.
              \nWhen you're ready to exit the game, click 'Start Over'.`);
         }
+
+        // List of character types
+        const characterTypes = [
+            "KIDS",
+            "MARVEL SUPERHERO",
+            "SPONGEBOB",
+            "TV SHOW FRIENDS",
+            "DISNEY PRINCESS",
+            "VIDEO GAME HERO",
+            "STAR WARS",
+            "SUPER VILLAIN",
+            "FANTASY CREATURE",
+            "HISTORICAL FIGURE"
+        ];
+
+        // Function to set a random character type
+        function setRandomCharacterType() {
+            const randomIndex = Math.floor(Math.random() * characterTypes.length);
+            document.getElementById('characterTypeInput').value = characterTypes[randomIndex];
+        }
+
+        // Set random character type on page load
+        window.onload = setRandomCharacterType;
     </script>
 </body>
 </html>
