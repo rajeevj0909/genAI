@@ -86,7 +86,7 @@ try:
         system_instruction = (
             f"This is you: {ai_role_goal}."
             f"Keep your identity and goal a secret throughout the game! Use the user to achieve your goal. "
-            f"If the user mentions your real identity, you lose, admit defeat."
+            f"If the user realises who you are, you lose, admit defeat."
             f"If the user gives up, you win."
             f"Once the game is over reveal your role and goal."
             f"Provide clues, but don't reveal too much."
