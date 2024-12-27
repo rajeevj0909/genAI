@@ -16,7 +16,7 @@ try:
         model="gpt-4o-mini",
         store=True,
         messages=[
-            {"role":"user","content":"Name 5 fun things to do in London."},
+            {"role":"user","content":"Name 3 animals"}
         ]
     )
 
