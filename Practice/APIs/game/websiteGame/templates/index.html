@@ -185,18 +185,55 @@
 
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                font-size: 12px; /* Make text smaller */
+                height: 100vh; /* Ensure body fits within viewport */
+                overflow: hidden; /* Prevent scrolling */
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between; /* Ensure elements are spaced correctly */
+            }
+
             textarea {
                 width: calc(100% - 60px); /* Ensure input box fits smaller screens */
             }
 
             #inputContainer {
                 flex-direction: column;
-                align-items: stretch;
+                align-items: center; /* Center the input container */
+                width: 100%;
+                position: relative; /* Ensure it stays within the flow of the document */
+                margin-top: auto; /* Push it to the bottom */
             }
 
             button {
                 width: 100%;
                 margin-top: 10px;
+            }
+
+            #helpButton, #startOverButton {
+                position: static;
+                width: 48%;
+                margin: 5px 1%;
+            }
+
+            #startOverButton {
+                margin-top: 0;
+            }
+
+            #section1 {
+                flex: 0.3; /* Reduce size of section 1 */
+                padding: 0 10px;
+            }
+
+            #section2, #section3 {
+                width: 100%;
+                padding: 0 10px;
+            }
+
+            #chatLog {
+                height: 50vh; /* Increase height for smaller screens */
+                flex-grow: 1; /* Allow it to grow and take available space */
             }
         }
 
@@ -224,6 +261,9 @@
 <body>
     <!-- Start Over Button -->
     <button id="startOverButton" onclick="window.location.reload();">Start Over</button>
+
+    <!-- Help Button -->
+    <button id="helpButton" onclick="openHelp()">Help</button>
 
     <!-- Section 1 -->
     <div id="section1">
@@ -256,7 +296,7 @@
         <div id="helpModalContent">
             <span class="close" onclick="closeHelp()">&times;</span>
             <h2>Game Rules</h2>
-            <p>In this game, the AI has picked a secret character and goal. Your job is to figure out who the character is based on clues provided by the AI. You will interact with the AI and receive hints through conversation. If you're stuck or want to give up, simply let the AI know, and it will end the game!</p>
+            <p>In this game, the AI has picked a secret character. Your job is to figure out who the character is based on clues provided by the AI. You will interact with the AI and receive hints through conversation. If you're stuck or want to give up, simply let the AI know, and it will end the game!</p>
             <p>Work out who you are based on the clues, and remember, if you want to give up, just say so!</p>
             <p><strong>Good luck!</strong></p>
             <p style="font-size: 12px; text-align: center; margin-top: 20px;">
@@ -265,9 +305,6 @@
             </p>
         </div>
     </div>
-
-    <!-- Help Button -->
-    <button id="helpButton" onclick="openHelp()">Help</button>
 
     <script>
         function startGame() {
@@ -360,7 +397,7 @@
 
         function showGameOverPopup(message) {
             document.getElementById('gameMessage').innerText =  (message
-            + `\nYou may carry on the conversation to ask the AI who they were and what their goal was.
+            + `\nYou may carry on the conversation to ask questions to the character.
              \nWhen you're ready to exit the game, click 'Start Over'.`);
         }
 
