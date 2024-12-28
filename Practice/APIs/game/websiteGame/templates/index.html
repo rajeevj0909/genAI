@@ -276,7 +276,7 @@
 
     <!-- Section 1 -->
     <div id="section1">
-        <h1>Rajeev's AI Role-Playing Guessing Game</h1>
+        <h1 id="gameTitle">Rajeev's AI Role-Playing Guessing Game</h1>
         <p id="introText">In this game, you will try to guess the character chosen by the AI based on the clues provided. Choose a character type to start the game.</p>
         <div id="characterTypeContainer">
             <label for="characterTypeInput">You have chosen to guess a</label>
@@ -368,6 +368,7 @@
                             document.getElementById('gameMessage').style.color = '#39FF14'; 
                             document.getElementById('gameMessage').style.fontWeight = 'bold';
                             document.getElementById('gameMessage').style.fontSize = 'calc(1em + 2px)';
+                            document.getElementById('gameTitle').style.display = 'none';
                         }
                         else if (data.gameStatus.includes("lost")) {//If user lost
                             showGameOverPopup("You have given up! The AI has won!");
@@ -375,6 +376,7 @@
                             document.getElementById('gameMessage').style.color = 'red'; 
                             document.getElementById('gameMessage').style.fontWeight = 'bold';
                             document.getElementById('gameMessage').style.fontSize = 'calc(1em + 2px)';
+                            document.getElementById('gameTitle').style.display = 'none';
                         } 
                         chatLog.innerHTML += `<p><b>You:</b> ${userInput}</p>`;
                         chatLog.innerHTML += `<p><b>Robot:</b> ${data.response}</p>`;
