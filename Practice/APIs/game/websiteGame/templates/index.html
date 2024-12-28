@@ -12,7 +12,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: center; /* Center elements vertically */
             height: 100vh;
             width: 100vw;
             background-color: #000000; /* Black background */
@@ -29,7 +29,7 @@
         }
 
         #section1 {
-            flex: 1;
+            flex: 1; /* Center section 1 */
             text-align: center;
         }
 
@@ -42,7 +42,7 @@
         #chatLog {
             border: 1px solid #34495e;
             padding: 10px;
-            height: 300px;
+            height: 50vh; /* Increase height */
             background: #2c3e50; /* Dark grey background */
             overflow-y: auto;
             width: 100%;
@@ -78,6 +78,8 @@
             width: 100%;
             max-width: 1000px;
             margin-top: 10px;
+            position: relative; /* Ensure it stays within the flow of the document */
+            bottom: 0; /* Position at the bottom */
         }
 
         button {
@@ -188,7 +190,7 @@
             body {
                 font-size: 12px; /* Make text smaller */
                 height: 100vh; /* Ensure body fits within viewport */
-                overflow: hidden; /* Prevent scrolling */
+                overflow-y: auto; /* Allow vertical scrolling */
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between; /* Ensure elements are spaced correctly */
