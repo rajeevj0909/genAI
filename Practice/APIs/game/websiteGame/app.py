@@ -154,4 +154,4 @@ def check_game_status():
         return f"An error occurred while determining the game status: {e}"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
