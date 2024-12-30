@@ -1,4 +1,32 @@
-runtime: python39
+runtime: python312
 entrypoint: gunicorn -b :$PORT app:app
-automatic_scaling:
-  max_instances: 1
+
+env: flex
+service: gen-ai-game
+
+runtime_config:
+  operating_system: "ubuntu22"
+
+manual_scaling:
+  instances: 1  # Set the number of instances
+
+readiness_check:
+  path: "/readiness_check"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  app_start_timeout_sec: 300
+
+# Optional: If you need to define environment variables
+# env_variables:
+#   VARIABLE_NAME: value
+
+# Optional: If you need to define health checks
+# health_check:
+#   check_interval_sec: 5
+#   timeout_sec: 10
+#   healthy_threshold: 2
+#   unhealthy_threshold: 2
+#   host: localhost
+#   path: /_ah/health

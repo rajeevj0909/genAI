@@ -176,5 +176,9 @@ def check_game_status():
     except Exception as e:
         return f"An error occurred while determining the game status: {e}"
 
+@app.route('/readiness_check')
+def readiness_check():
+    return "OK", 200
+
 if __name__ == '__main__':
     app.run(debug=False)
