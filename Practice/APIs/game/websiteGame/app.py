@@ -7,8 +7,8 @@ app = Flask(__name__)
 
 # Load environment variables
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
+GEMINI_GAME_API_KEY = os.getenv("GEMINI_GAME_API_KEY")
+genai.configure(api_key=GEMINI_GAME_API_KEY)
 
 # Initialize conversation history and selected role
 conversation_history = []
