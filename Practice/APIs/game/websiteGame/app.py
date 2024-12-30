@@ -1,14 +1,37 @@
 from flask import Flask, request, jsonify, render_template
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 import google.generativeai as genai
+
+# Function to get API key from .env file
+def get_api_key_from_env():
+    load_dotenv()
+    return os.getenv("GEMINI_GAME_API_KEY")
+
+# Function to get API key from Google Cloud Secret Manager
+def get_api_key_from_secret_manager():
+    from google.cloud import secretmanager
+    gcloud_project_id = "GCLOUD_PROJECT_ID"  # Replace with GCP project ID for deployment
+    #load_dotenv() # Load from .env file for local testing
+    #gcloud_project_id = os.getenv("GCLOUD_PROJECT_ID")  # Load from .env file for local testing
+    secret_name = f"projects/{gcloud_project_id}/secrets/GEMINI_GAME_API_KEY/versions/latest"
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        response = client.access_secret_version(name=secret_name)
+        return response.payload.data.decode("UTF-8")
+    except Exception as e:
+        print(f"An error occurred while accessing the secret: {e}")
+        return None
 
 app = Flask(__name__)
 
-# Load environment variables
-load_dotenv()
-GEMINI_GAME_API_KEY = os.getenv("GEMINI_GAME_API_KEY")
-genai.configure(api_key=GEMINI_GAME_API_KEY)
+# Choose which function to use for getting the API key
+DEPLOY_TO_CLOUD = True  # Set to True to use Google Cloud Secret Manager, False to use .env file locally
+if DEPLOY_TO_CLOUD:
+    GEMINI_API_KEY = get_api_key_from_secret_manager()
+else:
+    GEMINI_API_KEY = get_api_key_from_env()
+genai.configure(api_key=GEMINI_API_KEY)
 
 # Initialize conversation history and selected role
 conversation_history = []
