@@ -2,7 +2,7 @@ runtime: python
 entrypoint: gunicorn -b :$PORT app:app
 
 env: flex
-service: gen-ai-game
+service: default
 
 runtime_config:
   operating_system: "ubuntu22"
