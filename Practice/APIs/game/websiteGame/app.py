@@ -20,8 +20,7 @@ def get_api_key_from_secret_manager():
         response = client.access_secret_version(name=secret_name)
         return response.payload.data.decode("UTF-8")
     except Exception as e:
-        print(f"An error occurred while accessing the secret: {e}")
-        return None
+        return str(e)
 
 app = Flask(__name__)
 
@@ -82,11 +81,10 @@ def start_game():
         )
         ai_role = characterInfo.text.strip()
         game_over = False  # Reset the game_over flag
-        print(f"AI Role: {ai_role}") #DEBUG - To see the generated role
         conversation_history = []  # Reset history
         return jsonify({"message": "Game started! The AI has picked its secret role. Start guessing!"})
     except Exception as e:
-        return jsonify({"error": f"An error occurred: {e}"}), 500
+        return jsonify({"error": f"An error occurred creating a character: {e}"}), 500
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -138,12 +136,11 @@ def chat():
         # If game is won or lost, return the status message and update button color
         return jsonify({
             "response": gameResponse.text,
-            "gameStatus": game_status,  # "won" or "lost"
-            #"buttonColor": "green" if game_status == "won" else "red"
+            "gameStatus": game_status,  # "won" or "lost" or "ongoing"
         })
 
     except Exception as e:
-        return jsonify({"error": f"An error occurred: {e}"}), 500
+        return jsonify({"error": f"An error occurred with the response: {e}"}), 500
 
 def check_game_status():
     try:
@@ -170,7 +167,6 @@ def check_game_status():
         # Determine the game status based on the model's response
         game_status = gameStatusResponse.text.strip().lower()
 
-        print(f"Game status: {game_status}")
         return game_status
 
     except Exception as e:
