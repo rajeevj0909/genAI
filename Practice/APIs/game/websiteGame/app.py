@@ -20,12 +20,12 @@ def get_api_key_from_secret_manager():
         response = client.access_secret_version(name=secret_name)
         return response.payload.data.decode("UTF-8")
     except Exception as e:
-        return str(e)
+        return f"An error occurred while accessing the secret: {e}"
 
 app = Flask(__name__)
 
 # Choose which function to use for getting the API key
-DEPLOY_TO_CLOUD = True  # Set to True to use Google Cloud Secret Manager, False to use .env file locally
+DEPLOY_TO_CLOUD = False  # Set to True to use Google Cloud Secret Manager, False to use .env file locally
 if DEPLOY_TO_CLOUD:
     GEMINI_API_KEY = get_api_key_from_secret_manager()
 else:
@@ -66,18 +66,20 @@ def start_game():
         gameModel = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
             system_instruction=(
-                f"You are tasked with selecting a unique role for yourself. "
-                f"Please choose a character role. "
-                f"Your role should be interesting, creative, and fun. "
-                f"Here are some examples to inspire you:\n{role_examples}\n"
-                f"Choose a {character_type} character that is popular and fun from a film, book or TV Show. Be creative! "
-                f"Then, state your role in a short format."
+                f'''You are tasked with selecting a unique role for yourself. 
+                Please choose a character role. 
+                Your role should be interesting, creative, and fun. 
+                Here are some examples to inspire you:
+                ''' + role_examples + '''
+                Choose a ''' + character_type + ''' character that is popular and fun
+                from a film, book or TV Show. It needs to be well-known and identifiable. 
+                Be creative! Then, state your role in a short format.'''
             )
         )
         
         characterInfo = gameModel.generate_content(
             contents=["Generate a role."],
-            generation_config={"temperature": 1.5} #Higher temperature result in more creative character roles
+            generation_config={"temperature": 1.2} #Higher temperature result in more creative character roles
         )
         ai_role = characterInfo.text.strip()
         game_over = False  # Reset the game_over flag
@@ -104,26 +106,30 @@ def chat():
             game_status = "ongoing"  # Keep the game status as ongoing if the game is over
 
         system_instruction = (
-            f"This is you: {ai_role}."
-            f"Keep your identity a secret throughout the game! Use the user to achieve your goal. "
-            f"Provide clues throughout the game, but don't reveal too much."
+            f'''This is you: {ai_role}.
+            Keep your identity a secret throughout the game! Help the user figure out who the character is by providing clues. 
+            Provide clues throughout the game, but don't reveal too much.
+            When the user asks a question, give a straightforward answer/clue.
+            '''
         )
 
         if game_status == "won" and not game_over:
             game_over = True  # Set the game_over flag to True
             system_instruction = (
-                f"This is you: {ai_role}."
-                f"Keep your identity a secret throughout the game! Use the user to achieve your goal. "
-                f"The user has now won the game. Reveal your identity if you have not already. "
-                f"Answer any other questions the user may have."
+                f'''This is you: {ai_role}.
+                The user has won the game! Reveal your identity if you have not already.
+                Explain yourself and your role to the user.
+                Answer any other questions the user may have.
+                '''
             )
         elif game_status == "lost" and not game_over:
             game_over = True  # Set the game_over flag to True
             system_instruction = (
-                f"This is you: {ai_role}."
-                f"Keep your identity a secret throughout the game! Use the user to achieve your goal. "
-                f"The user has given up. Reveal your identity if you have not already. "
-                f"Answer any other questions the user may have."
+                f'''This is you: {ai_role}.
+                The user has given up! Reveal your identity if you have not already.
+                Explain yourself and your role to the user.
+                Answer any other questions the user may have.
+                '''
             )
 
         guessModel = genai.GenerativeModel(
@@ -147,16 +153,17 @@ def check_game_status():
         # Use a new model to analyze the conversation and determine the status
         gameStatusModel = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
-            system_instruction = '''
+            system_instruction = f'''
             You are an AI referee in a guessing game. Analyze the following conversation history 
             and determine the status of the game. The conversation involves a user interacting with 
             an AI, and the goal of the game is for the user to guess the character name. 
             If the user says "I give up" or something like this, the game is lost by the user. 
-            The AI has a secret role that must keep hidden from the user, here is the role:'''
-            + ai_role + 
-            ''' If the user says the name of the character or identifies the character correctly, 
-            the game is won by the user. If neither of these conditions are met, the game is ongoing.
-            Analyse the conversation and respond with one of the following: "won", "lost", or "ongoing".
+            The AI has a secret role that must keep hidden from the user, here is the role:
+            {ai_role} 
+            If the user says the name of the character or identifies the character correctly, 
+            the game is won by the user. If neither of these conditions are met, or the user has 
+            guessed the incorrect character, the game is ongoing. Analyse the conversation and 
+            respond with one of the following: "won", "lost", or "ongoing".
             '''
         )
         
