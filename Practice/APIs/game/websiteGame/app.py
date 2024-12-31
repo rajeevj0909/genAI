@@ -105,15 +105,16 @@ def chat():
         else:
             game_status = "ongoing"  # Keep the game status as ongoing if the game is over
 
-        system_instruction = (
+        if game_status == "ongoing":
+            system_instruction = (
             f'''This is you: {ai_role}.
-            Keep your identity a secret throughout the game! Help the user figure out who the character is by providing clues. 
+            Keep your identity a secret throughout the game! Help the user 
+            figure out who the character is by providing clues. 
             Provide clues throughout the game, but don't reveal too much.
-            When the user asks a question, give a straightforward answer/clue.
+            Respond to questions with a straightforward answer/clue.
             '''
-        )
-
-        if game_status == "won" and not game_over:
+            )
+        elif game_status == "won" and not game_over:
             game_over = True  # Set the game_over flag to True
             system_instruction = (
                 f'''This is you: {ai_role}.
