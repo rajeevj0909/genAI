@@ -66,9 +66,8 @@ def start_game():
         gameModel = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
             system_instruction=(
-                f'''You are tasked with selecting a unique role for yourself. 
-                Please choose a character role. 
-                Your role should be interesting, creative, and fun. 
+                f'''You are tasked with selecting a role for yourself. 
+                Please choose a character role.  
                 Here are some examples to inspire you:
                 ''' + role_examples + '''
                 Choose a ''' + character_type + ''' character that is popular and fun
@@ -84,7 +83,9 @@ def start_game():
         ai_role = characterInfo.text.strip()
         game_over = False  # Reset the game_over flag
         conversation_history = []  # Reset history
-        return jsonify({"message": "Game started! The AI has picked its secret role. Start guessing!"})
+        return jsonify({
+            "message": "Game started! The AI has picked its secret role. Start asking questions to guess the character!"
+        })
     except Exception as e:
         return jsonify({"error": f"An error occurred creating a character: {e}"}), 500
 
@@ -112,6 +113,7 @@ def chat():
             figure out who the character is by providing clues. 
             Provide clues throughout the game, but don't reveal too much.
             Respond to questions with a straightforward answer/clue.
+            Answer in one or two sentences. Do not give away your name!
             '''
             )
         elif game_status == "won" and not game_over:
@@ -155,16 +157,15 @@ def check_game_status():
         gameStatusModel = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
             system_instruction = f'''
-            You are an AI referee in a guessing game. Analyze the following conversation history 
-            and determine the status of the game. The conversation involves a user interacting with 
-            an AI, and the goal of the game is for the user to guess the character name. 
-            If the user says "I give up" or something like this, the game is lost by the user. 
-            The AI has a secret role that must keep hidden from the user, here is the role:
-            {ai_role} 
-            If the user says the name of the character or identifies the character correctly, 
-            the game is won by the user. If neither of these conditions are met, or the user has 
-            guessed the incorrect character, the game is ongoing. Analyse the conversation and 
-            respond with one of the following: "won", "lost", or "ongoing".
+                You are an AI referee in a guessing game. Analyze the following conversation history 
+                and determine the status of the game. The conversation involves a user interacting with 
+                an AI, and the goal of the game is for the user to guess the character name. 
+                The AI has a secret role that must be kept hidden from the user. Here is the role: {ai_role}. 
+                If the user says the name of your character or identifies your character correctly, 
+                the game is won by the user! If the user says "I give up" or something similar, 
+                the game is lost by the user. If neither of these conditions are met, or the user has 
+                guessed the incorrect character, the game is ongoing. Analyze the conversation and 
+                respond with one of the following: "won", "lost", or "ongoing".
             '''
         )
         

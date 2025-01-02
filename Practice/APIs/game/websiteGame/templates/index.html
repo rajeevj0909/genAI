@@ -266,6 +266,19 @@
             transition: all 0.3s ease;
         }
 
+        #randomizeButton {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #ecf0f1;
+            font-size: 20px;
+            margin-left: 5px;
+        }
+
+        #randomizeButton:hover {
+            color: #3498db;
+        }
+
     </style>
 </head>
 <body>
@@ -278,9 +291,10 @@
     <!-- Section 1 -->
     <div id="section1">
         <h1 id="gameTitle">Rajeev's AI Role-Playing Guessing Game</h1>
-        <p id="introText">In this game, you will try to guess the character chosen by the AI based on the clues provided. Choose a character type to start the game.</p>
+        <p id="introText">In this game, you will have a conversation with the AI to guess the character it has chosen based on the clues provided. The character is from a book, TV show, or movie. Choose a character type to start the game.</p>
         <div id="characterTypeContainer">
             <label for="characterTypeInput">You have chosen to guess a</label>
+            <button id="randomizeButton" onclick="setRandomCharacterType()">🔄</button>
             <input type="text" id="characterTypeInput" value="KIDS">
             <label for="characterTypeInput">character.</label>
         </div>
@@ -306,8 +320,17 @@
         <div id="helpModalContent">
             <span class="close" onclick="closeHelp()">&times;</span>
             <h2>Game Rules</h2>
-            <p>In this game, the AI has picked a secret character. Your job is to figure out who the character is based on clues provided by the AI. You will interact with the AI and receive hints through conversation. If you're stuck or want to give up, simply let the AI know, and it will end the game!</p>
-            <p>Work out who you are based on the clues, and remember, if you want to give up, just say so!</p>
+            <p>In this game, the AI has picked a secret character from a book, TV show, or movie. Your job is to figure out who the character is based on clues provided by the AI. You will interact with the AI and receive hints through conversation.</p>
+            <ul>
+            <li><strong>Aim:</strong> Find out who the character is.</li>
+            <li><strong>To Win:</strong> Explicitly state who you are guessing the character is.</li>
+            <li><strong>To Give Up:</strong> Clearly and explicitly give up. This will result in losing the game.</li>
+            </ul>
+            <h3>Tips:</h3>
+            <ul>
+            <li>Ask for clues if you're stuck.</li>
+            <li>Use the conversation to gather as much information as possible.</li>
+            </ul>
             <p><strong>Good luck!</strong></p>
             <p style="font-size: 12px; text-align: center; margin-top: 20px;">
                 Created by <br>
@@ -342,7 +365,7 @@
                         document.getElementById('startOverButton').style.display = 'block';
 
                         // Send "Hello" to start the game
-                        document.getElementById('userInput').value = "Hello";
+                        document.getElementById('userInput').value = "Hello. Who are you?";
                         sendMessage();
                     }
                 });
@@ -380,7 +403,7 @@
                             document.getElementById('gameTitle').style.display = 'none';
                         } 
                         chatLog.innerHTML += `<p><b>You:</b> ${userInput}</p>`;
-                        chatLog.innerHTML += `<p><b>Robot:</b> ${data.response}</p>`;
+                        chatLog.innerHTML += `<p><b>Character:</b> ${data.response}</p>`;
                         chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
                         document.getElementById('userInput').value = ''; // Clear input box
 
@@ -429,7 +452,13 @@
             "MOVIE",
             "DISNEY",
             "80s MOVIE",
-        ];
+            "THE BIG BANG THEORY",
+            "SUITS TV SHOW",
+            "GAME OF THRONES",
+            "THE SIMPSONS",
+            "FRIENDS TV SHOW",
+            "90s MOVIE"
+    ];
 
         // Function to set a random character type
         function setRandomCharacterType() {
