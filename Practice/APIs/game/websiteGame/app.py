@@ -113,6 +113,7 @@ def chat():
             figure out who the character is by providing clues. 
             Provide clues throughout the game, but don't reveal too much.
             Respond to questions with a straightforward answer/clue.
+            Be funny and creative!
             Answer in one or two sentences. Do not give away your name!
             '''
             )
