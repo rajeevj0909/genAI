@@ -1,3 +1,4 @@
 .env
 Practice/APIs/.env
 Practice/APIs/game/websiteGame/.env
+*.pyc
