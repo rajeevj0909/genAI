@@ -23,60 +23,6 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Initialise conversation history
-conversation_history = []
-
-print("Robot: Hello\nType 'quit' or 'exit' to end the conversation.\n")
-
-#Run Model
-def chat_mode():
-    try:
-        #Repeat questions
-        while True:
-            #Get user input
-            userInput = str(input("You: ")) 
-            if (((userInput.lower())=="quit") or (userInput.lower())=="exit"):
-                print("Robot: Bye!\n\n")
-                break
-
-            #Add user input to conversation history
-            conversation_history.append({
-                "role": "user",
-                "parts": [{"text": userInput}]
-            })    
-
-            #Run model
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-                #system_instruction="You are a pirate."
-            )
-            
-            #Get token info:  Returns the "context window" for the model, which is the combined input and output token limits.
-            '''
-            model_info = genai.get_model("models/gemini-1.5-flash")
-            print(f"{model_info.input_token_limit=}")
-            print(f"{model_info.output_token_limit=}")
-            '''
-
-            #Run response
-            response = model.generate_content(
-                contents=conversation_history,
-                #tools='google_search_retrieval' #Grounding in Google Search
-            )
-
-            # Append model response to the conversation history
-            conversation_history.append({
-                "role": "model",
-                "parts": [{"text": response.text}]
-            })
-            
-            #Print answer
-            print("\nRobot: " + response.text)
-
-    #Print error
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
 def save_images_from_response(response, prefix="generated_image"):
     idx = 1
     for part in response.candidates[0].content.parts:
@@ -89,93 +35,101 @@ def save_images_from_response(response, prefix="generated_image"):
             print(f"Saved image: {filename}")
             idx += 1
 
-def image_generation_mode():
-    client = genai.Client()
-    prompt = input("Enter your image prompt: ")
-    response = client.models.generate_content(
-        model="gemini-2.5-flash-image-preview",
-        contents=[prompt],
+def detect_image_intent(user_input):
+    """
+    Uses Gemini to classify if the user input is requesting an image.
+    Returns True if image intent is detected, else False.
+    """
+    # Use a lightweight Gemini model for intent classification
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+    system_instruction = (
+        "You are an intent classifier. "
+        "If the following user input is asking to generate, edit, or describe an image, respond with 'IMAGE'. "
+        "Otherwise, respond with 'CHAT'. Only respond with one word: IMAGE or CHAT."
     )
-    save_images_from_response(response)
-    # Iterative refinement
-    while True:
-        refine = input("Refine image? (y/n): ").strip().lower()
-        if refine != "y":
-            break
-        new_prompt = input("Describe your refinement: ")
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-image-preview",
-            contents=[new_prompt],
-        )
-        save_images_from_response(response, prefix="refined_image")
+    prompt = f"{system_instruction}\nUser input: {user_input}"
+    response = model.generate_content(prompt)
+    result = response.text.strip().upper()
+    return result == "IMAGE"
 
-def multi_image_mode():
+def unified_mode():
     client = genai.Client()
     print(
-        "\nMulti-Image-to-Image Mode:\n"
-        "You can provide one or more images to edit, compose, or refine.\n"
-        "When prompted, enter the full file paths to your images, separated by commas.\n"
-        "Example: C:/images/cat.png, C:/images/hat.png\n"
-        "You can use just one image for editing, or multiple for composition/style transfer.\n"
+        "Welcome! You can chat or ask to generate/edit images.\n"
+        "To generate or edit an image, include phrases like 'generate image', 'create image', 'edit image', etc. in your prompt.\n"
+        "If you want to use existing images, mention it in your prompt and you'll be asked for file paths.\n"
+        "Type 'quit' or 'exit' to end the session.\n"
     )
-    prompt = input("Enter your image editing/composition prompt: ")
-    img_paths = input("Enter image file paths (comma separated): ").split(",")
-    images = []
-    for path in img_paths:
-        path = path.strip()
-        if path:
-            try:
-                images.append(Image.open(path))
-            except Exception as e:
-                print(f"Could not open {path}: {e}")
-    if not images:
-        print("No valid images provided. Please ensure your file paths are correct.")
-        return
-    contents = [prompt] + images
-    response = client.models.generate_content(
-        model="gemini-2.5-flash-image-preview",
-        contents=contents,
-    )
-    save_images_from_response(response)
-    # Iterative refinement
+    conversation_history = []
     while True:
-        print(
-            "\nTo further refine, you can update your prompt. "
-            "The same images will be used as input.\n"
-            "If you want to use different images, restart this mode."
-        )
-        refine = input("Refine image? (y/n): ").strip().lower()
-        if refine != "y":
+        userInput = input("You: ").strip()
+        if userInput.lower() in ("quit", "exit"):
+            print("Robot: Bye!\n")
             break
-        new_prompt = input("Describe your refinement: ")
-        contents = [new_prompt] + images
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-image-preview",
-            contents=contents,
-        )
-        save_images_from_response(response, prefix="refined_image")
+
+        if detect_image_intent(userInput):
+            print(
+                "Do you want to use any existing images as input? (y/n)\n"
+                "If yes, you'll be prompted for image file paths (comma separated)."
+            )
+            use_images = input("Use images? (y/n): ").strip().lower()
+            images = []
+            if use_images == "y":
+                img_paths = input("Enter image file paths (comma separated): ").split(",")
+                for path in img_paths:
+                    path = path.strip()
+                    if path:
+                        try:
+                            images.append(Image.open(path))
+                        except Exception as e:
+                            print(f"Could not open {path}: {e}")
+                if not images:
+                    print("No valid images provided. Proceeding with text prompt only.")
+            contents = [userInput] + images if images else [userInput]
+            response = client.models.generate_content(
+                model="gemini-2.5-flash-image-preview",
+                contents=contents,
+            )
+            save_images_from_response(response)
+            # Iterative refinement
+            while True:
+                print(
+                    "\nTo refine, update your prompt. "
+                    "The same images will be used as input if you provided them.\n"
+                    "Type 'skip' to return to main prompt."
+                )
+                refine = input("Refine image? (y/n): ").strip().lower()
+                if refine != "y":
+                    break
+                new_prompt = input("Describe your refinement (or type 'skip'): ").strip()
+                if new_prompt.lower() == "skip":
+                    break
+                contents = [new_prompt] + images if images else [new_prompt]
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash-image-preview",
+                    contents=contents,
+                )
+                save_images_from_response(response, prefix="refined_image")
+        else:
+            # Chat mode
+            conversation_history.append({
+                "role": "user",
+                "parts": [{"text": userInput}]
+            })
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+            )
+            response = model.generate_content(
+                contents=conversation_history,
+            )
+            conversation_history.append({
+                "role": "model",
+                "parts": [{"text": response.text}]
+            })
+            print("\nRobot: " + response.text)
 
 def main():
-    print(
-        "Select mode:\n"
-        "1. Chat (text only)\n"
-        "2. Text-to-Image (generate image from description)\n"
-        "3. Multi-Image-to-Image (edit/combine images with prompt)\n"
-    )
-    mode = input("Enter 1, 2, or 3: ").strip()
-    if mode == "1":
-        chat_mode()
-    elif mode == "2":
-        print(
-            "\nText-to-Image Mode:\n"
-            "Describe the image you want to generate in detail.\n"
-            "Example: 'A photorealistic picture of a cat wearing sunglasses on a beach.'\n"
-        )
-        image_generation_mode()
-    elif mode == "3":
-        multi_image_mode()
-    else:
-        print("Invalid selection.")
+    unified_mode()
 
 if __name__ == "__main__":
     main()
