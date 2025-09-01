@@ -37,23 +37,36 @@ def save_images_from_response(response, prefix="generated_image"):
 
 def detect_image_intent(user_input):
     """
-    Uses Gemini to classify if the user input is requesting an image.
-    Returns True if image intent is detected, else False.
+    Use Gemini to classify intent as IMAGE or CHAT. Falls back to keyword check on error.
+    Returns True if intent is IMAGE.
     """
-    # Use a lightweight Gemini model for intent classification
-    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
-    system_instruction = (
-        "You are an intent classifier. "
-        "If the following user input is asking to generate, edit, or describe an image, respond with 'IMAGE'. "
-        "Otherwise, respond with 'CHAT'. Only respond with one word: IMAGE or CHAT."
-    )
-    prompt = f"{system_instruction}\nUser input: {user_input}"
-    response = model.generate_content(prompt)
-    result = response.text.strip().upper()
-    return result == "IMAGE"
+    try:
+        classifier = genai.GenerativeModel(model_name="gemini-1.5-flash")
+        system_instruction = (
+            "You are an intent classifier. If the user input asks to generate, edit, compose, or otherwise produce or modify an image, "
+            "respond with exactly the single word 'IMAGE'. Otherwise respond with exactly the single word 'CHAT'."
+        )
+        contents = [
+            {"role": "system", "parts": [{"text": system_instruction}]},
+            {"role": "user", "parts": [{"text": user_input}]}
+        ]
+        resp = classifier.generate_content(contents=contents)
+        result = (resp.text or "").strip().upper()
+        if result in ("IMAGE", "CHAT"):
+            return result == "IMAGE"
+    except Exception:
+        # fall through to keyword fallback
+        pass
 
-def unified_mode():
-    client = genai.Client()
+    # Fallback: keyword-based detection (keeps previous behavior if classifier fails)
+    keywords = [
+        "generate image", "create image", "edit image", "compose image", "draw", "picture",
+        "photo", "make image", "image of", "show me", "visualize", "illustrate"
+    ]
+    lowered = user_input.lower()
+    return any(k in lowered for k in keywords)
+
+def main():
     print(
         "Welcome! You can chat or ask to generate/edit images.\n"
         "To generate or edit an image, include phrases like 'generate image', 'create image', 'edit image', etc. in your prompt.\n"
@@ -85,13 +98,13 @@ def unified_mode():
                             print(f"Could not open {path}: {e}")
                 if not images:
                     print("No valid images provided. Proceeding with text prompt only.")
+
             contents = [userInput] + images if images else [userInput]
-            response = client.models.generate_content(
-                model="gemini-2.5-flash-image-preview",
-                contents=contents,
-            )
+            image_model = genai.GenerativeModel(model_name="gemini-2.5-flash-image-preview")
+            response = image_model.generate_content(contents=contents)
             save_images_from_response(response)
-            # Iterative refinement
+
+            # Iterative refinement using the same image_model
             while True:
                 print(
                     "\nTo refine, update your prompt. "
@@ -105,10 +118,7 @@ def unified_mode():
                 if new_prompt.lower() == "skip":
                     break
                 contents = [new_prompt] + images if images else [new_prompt]
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash-image-preview",
-                    contents=contents,
-                )
+                response = image_model.generate_content(contents=contents)
                 save_images_from_response(response, prefix="refined_image")
         else:
             # Chat mode
@@ -127,9 +137,6 @@ def unified_mode():
                 "parts": [{"text": response.text}]
             })
             print("\nRobot: " + response.text)
-
-def main():
-    unified_mode()
 
 if __name__ == "__main__":
     main()
