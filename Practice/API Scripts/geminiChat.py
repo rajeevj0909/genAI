@@ -10,7 +10,7 @@ Key Features:
 
 from dotenv import load_dotenv
 import os
-import google.generativeai as genai
+from google import genai
 
 #Suppress logging warnings
 os.environ["GRPC_VERBOSITY"] = "ERROR"
@@ -18,54 +18,30 @@ os.environ["GLOG_minloglevel"] = "2"
 
 #Get API key from .env file
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
 
-# Initialise conversation history
-conversation_history = []
+# Initialize the new unified GenAI Client
+client = genai.Client()
 
 print("Robot: Hello\nType 'quit' or 'exit' to end the conversation.\n")
 
 #Run Model
 try:
+    # Initialize chat session (automatically manages history/context)
+    chat = client.chats.create(model="gemini-2.5-flash")
+
     #Repeat questions
     while True:
         #Get user input
-        userInput = str(input("You: ")) 
-        if (((userInput.lower())=="quit") or (userInput.lower())=="exit"):
+        userInput = input("You: ").strip() 
+        if userInput.lower() in ("quit", "exit"):
             print("Robot: Bye!\n\n")
             break
 
-        #Add user input to conversation history
-        conversation_history.append({
-            "role": "user",
-            "parts": [{"text": userInput}]
-        })    
-
-        #Run model
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            #system_instruction="You are a pirate."
-        )
-        
-        #Get token info:  Returns the "context window" for the model, which is the combined input and output token limits.
-        '''
-        model_info = genai.get_model("models/gemini-1.5-flash")
-        print(f"{model_info.input_token_limit=}")
-        print(f"{model_info.output_token_limit=}")
-        '''
+        if not userInput:
+            continue
 
         #Run response
-        response = model.generate_content(
-            contents=conversation_history,
-            #tools='google_search_retrieval' #Grounding in Google Search
-        )
-
-        # Append model response to the conversation history
-        conversation_history.append({
-            "role": "model",
-            "parts": [{"text": response.text}]
-        })
+        response = chat.send_message(userInput)
         
         #Print answer
         print("\nRobot: " + response.text)

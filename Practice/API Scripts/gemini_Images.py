@@ -10,7 +10,8 @@ Key Features:
 
 from dotenv import load_dotenv
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from PIL import Image
 from io import BytesIO
 
@@ -20,11 +21,14 @@ os.environ["GLOG_minloglevel"] = "2"
 
 #Get API key from .env file
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
+
+# Initialize the new unified GenAI Client
+client = genai.Client()
 
 def save_images_from_response(response, prefix="generated_image"):
     idx = 1
+    if not response.candidates or not response.candidates[0].content or not response.candidates[0].content.parts:
+        return
     for part in response.candidates[0].content.parts:
         if getattr(part, "text", None) is not None:
             print(part.text)
@@ -41,16 +45,17 @@ def detect_image_intent(user_input):
     Returns True if intent is IMAGE.
     """
     try:
-        classifier = genai.GenerativeModel(model_name="gemini-1.5-flash")
         system_instruction = (
             "You are an intent classifier. If the user input asks to generate, edit, compose, or otherwise produce or modify an image, "
             "respond with exactly the single word 'IMAGE'. Otherwise respond with exactly the single word 'CHAT'."
         )
-        contents = [
-            {"role": "system", "parts": [{"text": system_instruction}]},
-            {"role": "user", "parts": [{"text": user_input}]}
-        ]
-        resp = classifier.generate_content(contents=contents)
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=user_input,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction
+            )
+        )
         result = (resp.text or "").strip().upper()
         if result in ("IMAGE", "CHAT"):
             return result == "IMAGE"
@@ -100,8 +105,13 @@ def main():
                     print("No valid images provided. Proceeding with text prompt only.")
 
             contents = [userInput] + images if images else [userInput]
-            image_model = genai.GenerativeModel(model_name="gemini-2.5-flash-image-preview")
-            response = image_model.generate_content(contents=contents)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"]
+                )
+            )
             save_images_from_response(response)
 
             # Iterative refinement using the same image_model
@@ -118,7 +128,13 @@ def main():
                 if new_prompt.lower() == "skip":
                     break
                 contents = [new_prompt] + images if images else [new_prompt]
-                response = image_model.generate_content(contents=contents)
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE"]
+                    )
+                )
                 save_images_from_response(response, prefix="refined_image")
         else:
             # Chat mode
@@ -126,10 +142,8 @@ def main():
                 "role": "user",
                 "parts": [{"text": userInput}]
             })
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-            )
-            response = model.generate_content(
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=conversation_history,
             )
             conversation_history.append({
